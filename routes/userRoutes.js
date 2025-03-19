@@ -1,11 +1,12 @@
 import express from 'express';
 import { 
   registerUser, 
-  verifyOtp, 
+  verifyRegOtp, 
   updateProfilePicture, 
   updateUserInfo, 
   user, 
   userLogin,
+  verifyForgotPasswordOtp,
   forgotPassword,
   resetPassword
 } from '../controllers/userController.js';
@@ -19,21 +20,27 @@ const router = express.Router();
 router.post('/register', validate(registerSchema), registerUser);
 
 // Verify OTP to complete registration
-router.post('/verify-otp', verifyOtp);
+router.post('/verify-otp', verifyRegOtp);
 
+// Verify OTP to complete registration
+router.post('/verify-for-otp', verifyForgotPasswordOtp);
+
+// Forgot password (sends OTP)
 router.post('/forgot-password', forgotPassword);
 
+// Reset password (verifies OTP and updates password)
 router.post('/reset-password', resetPassword);
+
 // Login user
 router.post('/login', userLogin);
 
-// Update profile picture (authenticated)
-router.put('/users/:userId/profile-picture', authMiddleware, updateProfilePicture);
+// Get user data (authenticated)
+router.get('/me', authMiddleware, user);
 
 // Update user info (authenticated)
-router.put('/users/:userId', validate(updateUserInfoSchema), authMiddleware, updateUserInfo);
+router.put('/me', authMiddleware, validate(updateUserInfoSchema), updateUserInfo);
 
-// Get user data (authenticated)
-router.get('/user', authMiddleware, user);
+// Update profile picture (authenticated)
+router.put('/me/profile-picture', authMiddleware, updateProfilePicture);
 
 export default router;
