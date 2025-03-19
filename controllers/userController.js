@@ -27,16 +27,16 @@ const upload = multer({
 // Register a new user with OTP
 const registerUser = async (req, res, next) => {
   try {
-    const { 
-      firstName, 
-      lastName, 
-      email, 
-      password, 
-      phoneNumber, 
-      dob, 
-      gender, 
-      location, 
-      profilePicture 
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      phoneNumber,
+      dob,
+      gender,
+      location,
+      profilePicture
     } = req.body;
 
     const existingUser = await User.findOne({ email });
@@ -55,16 +55,16 @@ const registerUser = async (req, res, next) => {
     }
 
     // Generate OTP and store user data temporarily
-    const userData = { 
-      firstName, 
-      lastName, 
-      email, 
-      password, 
-      phoneNumber, 
-      dob, 
-      gender, 
-      location, 
-      profilePicture 
+    const userData = {
+      firstName,
+      lastName,
+      email,
+      password,
+      phoneNumber,
+      dob,
+      gender,
+      location,
+      profilePicture
     };
     const otp = otpService.generateOtp(email, userData);
 
@@ -221,6 +221,101 @@ const updateUserInfo = async (req, res, next) => {
   }
 };
 
+// Forgot Password
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      const error = {
+        status: 404,
+        message: 'User not found',
+        extraDetails: 'No user exists with this email',
+      };
+      console.error('Forgot password error:', error);
+      return res.status(404).json(error);
+    }
+
+    // Generate OTP specifically for forgot password
+    const otp = otpService.generateForgotPasswordOtp(email);
+
+    // Send OTP email
+    await emailService.sendEmail(
+      email,
+      'forgotPassword', // Assuming you have a forgotPassword template
+      { 
+        otp, 
+        firstName: user.firstName, 
+        lastName: user.lastName 
+      }
+    );
+
+    console.log('Forgot password OTP sent successfully to:', email);
+    res.status(200).json({ 
+      message: 'OTP sent to email. Please verify to reset password.' 
+    });
+  } catch (error) {
+    console.error('Error in forgotPassword:', error.message);
+    next(error);
+  }
+};
+
+// Verify Forgot Password OTP and Reset Password
+const resetPassword = async (req, res, next) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ 
+        message: 'Email, OTP, and new password are required' 
+      });
+    }
+
+    // Verify OTP
+    const { isValid } = otpService.verifyForgotPasswordOtp(email, otp);
+    if (!isValid) {
+      return res.status(400).json({ 
+        message: 'Invalid or expired OTP' 
+      });
+    }
+
+    // Find user and update password
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ 
+        message: 'User not found' 
+      });
+    }
+
+    // Update password (will be hashed by pre-save hook)
+    user.password = newPassword;
+    await user.save();
+
+    // Send confirmation email
+    await emailService.sendEmail(
+      email,
+      'passwordResetConfirmation',
+      { 
+        firstName: user.firstName, 
+        lastName: user.lastName 
+      }
+    );
+
+    console.log('Password reset successfully for:', email);
+    res.status(200).json({ 
+      message: 'Password reset successfully' 
+    });
+  } catch (error) {
+    console.error('Error in resetPassword:', error.message);
+    next(error);
+  }
+};
+
 // Login User
 const userLogin = async (req, res, next) => {
   try {
@@ -278,11 +373,13 @@ const user = async (req, res) => {
   }
 };
 
-export { 
-  registerUser, 
-  verifyOtp, 
-  updateProfilePicture, 
-  updateUserInfo, 
-  user, 
-  userLogin 
+export {
+  registerUser,
+  verifyOtp,
+  updateProfilePicture,
+  updateUserInfo,
+  user,
+  userLogin,
+  forgotPassword,
+  resetPassword
 };

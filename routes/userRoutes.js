@@ -5,7 +5,9 @@ import {
   updateProfilePicture, 
   updateUserInfo, 
   user, 
-  userLogin 
+  userLogin,
+  forgotPassword,
+  resetPassword
 } from '../controllers/userController.js';
 import validate from '../middleware/validate.js';
 import { registerSchema, updateUserInfoSchema } from '../validations/userValidation.js';
@@ -19,6 +21,9 @@ router.post('/register', validate(registerSchema), registerUser);
 // Verify OTP to complete registration
 router.post('/verify-otp', verifyOtp);
 
+router.post('/forgot-password', forgotPassword);
+
+router.post('/reset-password', resetPassword);
 // Login user
 router.post('/login', userLogin);
 

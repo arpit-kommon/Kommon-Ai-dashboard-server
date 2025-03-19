@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import mongoose from './db/db.js'; // Fixed
 import userRoutes from './routes/userRoutes.js'; // Fixed
 import errorMiddleware from './middleware/errorMiddleware.js'; // Fixed
+import cors from 'cors';
 // import mongoose from './db/db.js';
 
 
@@ -18,12 +19,12 @@ app.use(express.json());
 dotenv.config();
 const server = http.createServer(app);
 
-// app.use(cors({
-//     origin: 'http://localhost:5173', // Adjust to your frontend URL
-//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//     allowedHeaders: ['Content-Type']
-//   }));
-// mongoose();
+app.use(cors({
+    origin: 'http://localhost:5173', // Adjust to your frontend URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type']
+  }));
+
 // ===========================configiration files====================================
 // ==============================routes defines======================================
 app.use(errorMiddleware); // Fixed
