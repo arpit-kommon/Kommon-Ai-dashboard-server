@@ -33,13 +33,20 @@ class OtpService {
   verifyRegistrationOtp(email, otp) {
     const storedOtpData = this.registrationOtpStore[email];
 
-    if (!storedOtpData || 
-        storedOtpData.otp !== otp || 
-        Date.now() > storedOtpData.expiresAt) {
-      delete this.registrationOtpStore[email];
-      return { isValid: false };
+    if (!storedOtpData) {
+      return { isValid: false, message: 'No OTP found for this email' };
     }
 
+    if (storedOtpData.otp !== otp) {
+      return { isValid: false, message: 'Invalid OTP' };
+    }
+
+    if (Date.now() > storedOtpData.expiresAt) {
+      delete this.registrationOtpStore[email]; // Delete only if expired
+      return { isValid: false, message: 'OTP has expired' };
+    }
+
+    // OTP is valid, delete it after successful verification
     const userData = storedOtpData.userData;
     delete this.registrationOtpStore[email];
     return { isValid: true, userData };
@@ -49,13 +56,20 @@ class OtpService {
   verifyForgotPasswordOtp(email, otp) {
     const storedOtpData = this.forgotPasswordOtpStore[email];
 
-    if (!storedOtpData || 
-        storedOtpData.otp !== otp || 
-        Date.now() > storedOtpData.expiresAt) {
-      delete this.forgotPasswordOtpStore[email];
-      return { isValid: false };
+    if (!storedOtpData) {
+      return { isValid: false, message: 'No OTP found for this email' };
     }
 
+    if (storedOtpData.otp !== otp) {
+      return { isValid: false, message: 'Invalid OTP' };
+    }
+
+    if (Date.now() > storedOtpData.expiresAt) {
+      delete this.forgotPasswordOtpStore[email]; // Delete only if expired
+      return { isValid: false, message: 'OTP has expired' };
+    }
+
+    // OTP is valid, delete it after successful verification
     delete this.forgotPasswordOtpStore[email];
     return { isValid: true };
   }
