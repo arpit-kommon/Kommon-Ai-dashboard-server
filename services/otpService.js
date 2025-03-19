@@ -2,29 +2,62 @@ import crypto from 'crypto';
 
 class OtpService {
   constructor() {
-    this.otpStore = {};
+    this.registrationOtpStore = {};
+    this.forgotPasswordOtpStore = {};
   }
 
-  // Generate OTP and store it
-  generateOtp(email, userData) {
+  // Generate OTP for registration
+  generateRegistrationOtp(email, userData) {
     const otp = crypto.randomInt(100000, 999999).toString();
-    const expirationTime = Date.now() + 10 * 60 * 1000; // 10 minutes
-    this.otpStore[email] = { otp, expiresAt: expirationTime, userData };
+    const expirationTime = Date.now() + 5 * 60 * 1000; // 5 minutes
+    this.registrationOtpStore[email] = { 
+      otp, 
+      expiresAt: expirationTime, 
+      userData 
+    };
     return otp;
   }
 
-  // Verify OTP
-  verifyOtp(email, otp) {
-    const storedOtpData = this.otpStore[email];
+  // Generate OTP for forgot password
+  generateForgotPasswordOtp(email) {
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const expirationTime = Date.now() + 5 * 60 * 1000; // 5 minutes
+    this.forgotPasswordOtpStore[email] = { 
+      otp, 
+      expiresAt: expirationTime 
+    };
+    return otp;
+  }
 
-    if (!storedOtpData || storedOtpData.otp !== otp || Date.now() > storedOtpData.expiresAt) {
-      delete this.otpStore[email]; // Clear expired/invalid OTP
+  // Verify registration OTP
+  verifyRegistrationOtp(email, otp) {
+    const storedOtpData = this.registrationOtpStore[email];
+
+    if (!storedOtpData || 
+        storedOtpData.otp !== otp || 
+        Date.now() > storedOtpData.expiresAt) {
+      delete this.registrationOtpStore[email];
       return { isValid: false };
     }
 
     const userData = storedOtpData.userData;
-    delete this.otpStore[email]; // Clear OTP after successful verification
+    delete this.registrationOtpStore[email];
     return { isValid: true, userData };
+  }
+
+  // Verify forgot password OTP
+  verifyForgotPasswordOtp(email, otp) {
+    const storedOtpData = this.forgotPasswordOtpStore[email];
+
+    if (!storedOtpData || 
+        storedOtpData.otp !== otp || 
+        Date.now() > storedOtpData.expiresAt) {
+      delete this.forgotPasswordOtpStore[email];
+      return { isValid: false };
+    }
+
+    delete this.forgotPasswordOtpStore[email];
+    return { isValid: true };
   }
 }
 
