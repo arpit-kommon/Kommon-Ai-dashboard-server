@@ -35,12 +35,12 @@ router.post('/reset-password', resetPassword);
 router.post('/login', userLogin);
 
 // Get user data (authenticated)
-router.get('/me', authMiddleware, user);
+router.get('/user', authMiddleware, user);
 
 // Update user info (authenticated)
-router.put('/me', authMiddleware, validate(updateUserInfoSchema), updateUserInfo);
+router.put('/user', authMiddleware, validate(updateUserInfoSchema), updateUserInfo);
 
 // Update profile picture (authenticated)
-router.put('/me/profile-picture', authMiddleware, updateProfilePicture);
+router.put('/user/profile-picture', authMiddleware, updateProfilePicture);
 
 export default router;

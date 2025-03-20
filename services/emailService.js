@@ -24,7 +24,7 @@ transporter.verify((error, success) => {
 const sendEmail = async (to, subject, text, html) => {
   try {
     const mailOptions = {
-      from: `"Example Company" <${process.env.EMAIL_USER}>`,
+      from: `"Kommon School" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       text,
