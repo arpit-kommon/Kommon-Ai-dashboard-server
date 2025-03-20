@@ -139,10 +139,13 @@ const forgotPassword = async (req, res, next) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      // Security: Don't reveal if the email exists
-      return res.status(200).json({ 
-        message: 'If an account exists, an OTP will be sent to the provided email.' 
-      });
+      const error = {
+        status: 404,
+        message: 'User not found',
+        extraDetails: 'No user exists with Email Id',
+      };
+      console.error('Forgot password error:', error);
+      return res.status(404).json(error);
     }
 
     const otp = otpService.generateForgotPasswordOtp(email);
@@ -229,9 +232,12 @@ const resetPassword = async (req, res, next) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ 
-        message: 'User not found' 
-      });
+      const error = {
+        status: 404,
+        message: 'User not found',
+        extraDetails: 'No user exists with this ID',
+      };
+      return res.status(404).json(error);
     }
 
     // Optional: Password strength check
