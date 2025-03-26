@@ -8,7 +8,8 @@ import {
   userLogin,
   verifyForgotPasswordOtp,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  updatePassword
 } from '../controllers/userController.js';
 import validate from '../middleware/validate.js';
 import { registerSchema, updateUserInfoSchema } from '../validations/userValidation.js';
@@ -38,9 +39,10 @@ router.post('/login', userLogin);
 router.get('/user', authMiddleware, user);
 
 // Update user info (authenticated)
-router.put('/user', authMiddleware, validate(updateUserInfoSchema), updateUserInfo);
+router.put('/user/info', authMiddleware, validate(updateUserInfoSchema), updateUserInfo);
 
 // Update profile picture (authenticated)
 router.put('/user/profile-picture', authMiddleware, updateProfilePicture);
+router.put('/user/password-update', authMiddleware, updatePassword);
 
 export default router;
