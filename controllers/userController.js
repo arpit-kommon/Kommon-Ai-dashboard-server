@@ -153,16 +153,16 @@ const forgotPassword = async (req, res, next) => {
     await emailService.sendEmail(
       email,
       'forgotPassword',
-      { 
-        otp, 
-        firstName: user.firstName || 'User', 
-        lastName: user.lastName || '' 
+      {
+        otp,
+        firstName: user.firstName || 'User',
+        lastName: user.lastName || ''
       }
     );
 
     console.log('Forgot password OTP sent successfully to:', email);
-    res.status(200).json({ 
-      message: 'Forgot password OTP sent successfully.' 
+    res.status(200).json({
+      message: 'Forgot password OTP sent successfully.'
     });
   } catch (error) {
     console.error('Error in forgotPassword:', error.message);
@@ -192,13 +192,86 @@ const verifyForgotPasswordOtp = async (req, res, next) => {
     );
 
     console.log('OTP verified successfully for:', email);
-    res.status(200).json({ 
-      message: 'OTP verified successfully', 
-      resetToken 
+    res.status(200).json({
+      message: 'OTP verified successfully',
+      resetToken
     });
   } catch (error) {
     console.error('Error in verifyForgotPasswordOtp:', error.message);
     next(error);
+  }
+};
+
+// Reset Password (requires resetToken)
+const updatePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    // Check if required fields are provided
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        message: "currentPassword and newPassword are required",
+      });
+    }
+
+    // Fetch user by ID
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found",
+        extraDetails: "No user exists with this ID",
+      });
+    }
+
+    // Compare current password
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({
+        status: 400,
+        message: "Current password is incorrect",
+        extraDetails: "Please enter the correct current password",
+      });
+    }
+
+    // Optional: Password strength check
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        message: "Password must be at least 8 characters long",
+      });
+    }
+
+    // Update password (pre-save hook will hash it)
+    user.password = newPassword;
+    await user.save();
+
+    // Send email notification (assuming emailService is defined)
+    try {
+      await emailService.sendEmail(
+        user.email, // Use user.email instead of undefined 'email'
+        "passwordResetConfirmation",
+        {
+          firstName: user.firstName || "User",
+          lastName: user.lastName || "",
+        }
+      );
+      console.log("Password reset email sent to:", user.email);
+    } catch (emailError) {
+      console.error("Error sending email:", emailError.message);
+      // Don't fail the request if email fails
+    }
+
+    console.log("Password reset successfully for:", user.email);
+    return res.status(200).json({
+      message: "Password reset successfully",
+    });
+  } catch (error) {
+    console.error("Error in updatePassword:", error.message);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
+    // next(error); // Uncomment if you have error middleware
   }
 };
 
@@ -208,8 +281,8 @@ const resetPassword = async (req, res, next) => {
     const { email, newPassword, resetToken } = req.body;
 
     if (!email || !newPassword || !resetToken) {
-      return res.status(400).json({ 
-        message: 'Email, new password, and reset token are required' 
+      return res.status(400).json({
+        message: 'Email, new password, and reset token are required'
       });
     }
 
@@ -218,15 +291,15 @@ const resetPassword = async (req, res, next) => {
     try {
       decoded = jwt.verify(resetToken, process.env.JWT_SECRET || 'your-secret-key');
     } catch (err) {
-      return res.status(400).json({ 
-        message: 'Invalid or expired reset token' 
+      return res.status(400).json({
+        message: 'Invalid or expired reset token'
       });
     }
 
     // Ensure the token matches the email
     if (decoded.email !== email) {
-      return res.status(400).json({ 
-        message: 'Invalid reset token for this email' 
+      return res.status(400).json({
+        message: 'Invalid reset token for this email'
       });
     }
 
@@ -242,8 +315,8 @@ const resetPassword = async (req, res, next) => {
 
     // Optional: Password strength check
     if (newPassword.length < 8) {
-      return res.status(400).json({ 
-        message: 'Password must be at least 8 characters long' 
+      return res.status(400).json({
+        message: 'Password must be at least 8 characters long'
       });
     }
 
@@ -253,22 +326,21 @@ const resetPassword = async (req, res, next) => {
     await emailService.sendEmail(
       email,
       'passwordResetConfirmation',
-      { 
-        firstName: user.firstName || 'User', 
-        lastName: user.lastName || '' 
+      {
+        firstName: user.firstName || 'User',
+        lastName: user.lastName || ''
       }
     );
 
     console.log('Password reset successfully for:', email);
-    res.status(200).json({ 
-      message: 'Password reset successfully' 
+    res.status(200).json({
+      message: 'Password reset successfully'
     });
   } catch (error) {
     console.error('Error in resetPassword:', error.message);
     next(error);
   }
 };
-
 // Update Profile Picture with resizing
 const updateProfilePicture = [
   upload.single('profilePicture'),
@@ -411,5 +483,6 @@ export {
   userLogin,
   forgotPassword,
   verifyForgotPasswordOtp,
-  resetPassword
+  resetPassword,
+  updatePassword
 };
