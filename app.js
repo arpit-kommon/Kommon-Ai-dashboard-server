@@ -7,8 +7,9 @@ import userRoutes from './routes/userRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import errorMiddleware from './middleware/errorMiddleware.js';
 import SchedulerService from './services/schedulerService.js';
-import cors from 'cors';
 import scheduleRoutes from './routes/scheduleRoutes.js';
+import userGuideRoutes from './routes/userGuideRoutes.js';
+import cors from 'cors';
 import axios from 'axios';
 
 const app = express();
@@ -52,6 +53,7 @@ app.use('/uploads', express.static('uploads'));
 app.use('/v1/api', userRoutes);
 app.use('/v1/api/notifications', notificationRoutes);
 app.use('/v1/api/schedules', scheduleRoutes);
+app.use('/v1/api/user-guide', userGuideRoutes);
 app.use(errorMiddleware);
 app.get('/', (req, res) => {
   res.send('Server is ON');
