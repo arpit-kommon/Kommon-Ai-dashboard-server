@@ -9,6 +9,7 @@ import errorMiddleware from './middleware/errorMiddleware.js';
 import SchedulerService from './services/schedulerService.js';
 import scheduleRoutes from './routes/scheduleRoutes.js';
 import userGuideRoutes from './routes/userGuideRoutes.js';
+import interviewFormRoutes from './routes/interviewFormRoutes.js';
 import cors from 'cors';
 import axios from 'axios';
 
@@ -48,16 +49,19 @@ io.on('connection', (socket) => {
   });
 });
 
-// Routes
+//================= Routes==================
 app.use('/uploads', express.static('uploads'));
 app.use('/v1/api', userRoutes);
 app.use('/v1/api/notifications', notificationRoutes);
 app.use('/v1/api/schedules', scheduleRoutes);
 app.use('/v1/api/user-guide', userGuideRoutes);
+app.use('/v1/api/interviewform', interviewFormRoutes);
 app.use(errorMiddleware);
 app.get('/', (req, res) => {
   res.send('Server is ON');
 });
+
+//=================================
 
 // Function to fetch schedules from the API
 async function fetchUserSchedules() {
